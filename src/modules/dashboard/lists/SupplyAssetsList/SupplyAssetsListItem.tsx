@@ -21,6 +21,7 @@ import { FormattedNumber } from 'src/components/primitives/FormattedNumber';
 import { NoData } from 'src/components/primitives/NoData';
 import { Row } from 'src/components/primitives/Row';
 import { TokenIcon } from 'src/components/primitives/TokenIcon';
+import { useSupplyButtonAction } from 'src/components/transactions/FunCheckout/useSupplyButtonAction';
 import { WalletBalancesMap } from 'src/hooks/app-data-provider/useWalletBalances';
 import { useAssetCaps } from 'src/hooks/useAssetCaps';
 import { useModalContext } from 'src/hooks/useModal';
@@ -98,6 +99,7 @@ export const SupplyAssetsListItemDesktop = ({
   supplyAPY,
   aIncentivesData,
   aTokenAddress,
+  decimals,
   underlyingAsset,
   isIsolated,
   usageAsCollateralEnabledOnUser,
@@ -110,7 +112,8 @@ export const SupplyAssetsListItemDesktop = ({
   const currentMarket = useRootStore((store) => store.currentMarket);
   const wrappedTokenReserves = useWrappedTokens();
 
-  const { openSupply, openSwitch } = useModalContext();
+  const { openSwitch } = useModalContext();
+  const handleSupplyClick = useSupplyButtonAction();
 
   // Disable the asset to prevent it from being supplied if supply cap has been reached
   const { supplyCap: supplyCapUsage, debtCeiling } = useAssetCaps();
@@ -243,7 +246,15 @@ export const SupplyAssetsListItemDesktop = ({
           disabled={disableSupply}
           variant="contained"
           onClick={() => {
-            openSupply(underlyingAsset, currentMarket, name, 'dashboard');
+            handleSupplyClick({
+              underlyingAsset,
+              name,
+              symbol,
+              decimals,
+              supplyAPY,
+              aTokenAddress,
+              collateralEnabled: usageAsCollateralEnabledOnUser,
+            });
           }}
         >
           <Trans>Supply</Trans>
@@ -319,6 +330,7 @@ export const SupplyAssetsListItemMobile = ({
   supplyAPY,
   aIncentivesData,
   aTokenAddress,
+  decimals,
   isIsolated,
   usageAsCollateralEnabledOnUser,
   underlyingAsset,
@@ -328,7 +340,7 @@ export const SupplyAssetsListItemMobile = ({
   walletBalancesMap,
 }: SupplyAssetsListItemProps) => {
   const currentMarket = useRootStore((store) => store.currentMarket);
-  const { openSupply } = useModalContext();
+  const handleSupplyClick = useSupplyButtonAction();
   const wrappedTokenReserves = useWrappedTokens();
 
   // Disable the asset to prevent it from being supplied if supply cap has been reached
@@ -448,7 +460,17 @@ export const SupplyAssetsListItemMobile = ({
         <Button
           disabled={disableSupply}
           variant="contained"
-          onClick={() => openSupply(underlyingAsset, currentMarket, name, 'dashboard')}
+          onClick={() =>
+            handleSupplyClick({
+              underlyingAsset,
+              name,
+              symbol,
+              decimals,
+              supplyAPY,
+              aTokenAddress,
+              collateralEnabled: usageAsCollateralEnabledOnUser,
+            })
+          }
           sx={{ mr: 1.5 }}
           fullWidth
         >

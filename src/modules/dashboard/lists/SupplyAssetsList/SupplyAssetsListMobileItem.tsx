@@ -1,6 +1,7 @@
 import { ProtocolAction } from '@aave/contract-helpers';
 import { Trans } from '@lingui/macro';
 import { Box, Button } from '@mui/material';
+import { useSupplyButtonAction } from 'src/components/transactions/FunCheckout/useSupplyButtonAction';
 import { useAssetCaps } from 'src/hooks/useAssetCaps';
 import { useRootStore } from 'src/store/root';
 import { DashboardReserve } from 'src/utils/dashboardSortUtils';
@@ -11,7 +12,6 @@ import { CapType } from '../../../../components/caps/helper';
 import { IncentivesCard } from '../../../../components/incentives/IncentivesCard';
 import { Link, ROUTES } from '../../../../components/primitives/Link';
 import { Row } from '../../../../components/primitives/Row';
-import { useModalContext } from '../../../../hooks/useModal';
 import { ListItemCanBeCollateral } from '../ListItemCanBeCollateral';
 import { ListMobileItemWrapper } from '../ListMobileItemWrapper';
 import { ListValueRow } from '../ListValueRow';
@@ -27,6 +27,7 @@ export const SupplyAssetsListMobileItem = ({
   supplyAPY,
   aIncentivesData,
   aTokenAddress,
+  decimals,
   isIsolated,
   usageAsCollateralEnabledOnUser,
   isActive,
@@ -36,7 +37,7 @@ export const SupplyAssetsListMobileItem = ({
   isPaused,
 }: DashboardReserve) => {
   const currentMarket = useRootStore((state) => state.currentMarket);
-  const { openSupply } = useModalContext();
+  const handleSupplyClick = useSupplyButtonAction();
 
   // Disable the asset to prevent it from being supplied if supply cap has been reached
   const { supplyCap: supplyCapUsage } = useAssetCaps();
@@ -107,7 +108,17 @@ export const SupplyAssetsListMobileItem = ({
         <Button
           disabled={disableSupply}
           variant="contained"
-          onClick={() => openSupply(underlyingAsset, currentMarket, name, 'dashboard')}
+          onClick={() =>
+            handleSupplyClick({
+              underlyingAsset,
+              name,
+              symbol,
+              decimals,
+              supplyAPY,
+              aTokenAddress,
+              collateralEnabled: usageAsCollateralEnabledOnUser,
+            })
+          }
           sx={{ mr: 1.5 }}
           fullWidth
         >
