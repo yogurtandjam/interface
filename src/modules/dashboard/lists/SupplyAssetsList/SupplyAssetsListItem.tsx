@@ -21,6 +21,7 @@ import { FormattedNumber } from 'src/components/primitives/FormattedNumber';
 import { NoData } from 'src/components/primitives/NoData';
 import { Row } from 'src/components/primitives/Row';
 import { TokenIcon } from 'src/components/primitives/TokenIcon';
+import { isFunSupplyAsset } from 'src/components/transactions/FunCheckout/funSupplyAssets';
 import { useSupplyButtonAction } from 'src/components/transactions/FunCheckout/useSupplyButtonAction';
 import { WalletBalancesMap } from 'src/hooks/app-data-provider/useWalletBalances';
 import { useAssetCaps } from 'src/hooks/useAssetCaps';
@@ -51,6 +52,7 @@ export const SupplyAssetsListItem = (
   const downToXSM = useMediaQuery(theme.breakpoints.down('xsm'));
   const { supplyCap } = useAssetCaps();
   const wrappedTokenReserves = useWrappedTokens();
+  const currentMarket = useRootStore((store) => store.currentMarket);
 
   const { isActive, isFreezed, walletBalance, underlyingAsset } = params;
 
@@ -62,10 +64,15 @@ export const SupplyAssetsListItem = (
     wrappedToken &&
     params.walletBalances[wrappedToken.tokenIn.underlyingAsset.toLowerCase()].amount !== '0';
 
+  // fun-routed assets can be supplied from any EVM asset / fiat via the funkit
+  // checkout, so an empty wallet doesn't block supplying them (protocol-level
+  // blocks — inactive/frozen/capped — still apply).
+  const isFunSupply = isFunSupplyAsset(currentMarket, underlyingAsset);
+
   const disableSupply =
     !isActive ||
     isFreezed ||
-    (Number(walletBalance) <= 0 && !canSupplyAsWrappedToken) ||
+    (Number(walletBalance) <= 0 && !canSupplyAsWrappedToken && !isFunSupply) ||
     supplyCap.isMaxed;
 
   const props: SupplyAssetsListItemProps = {

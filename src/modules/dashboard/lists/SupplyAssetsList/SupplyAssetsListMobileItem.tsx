@@ -1,6 +1,7 @@
 import { ProtocolAction } from '@aave/contract-helpers';
 import { Trans } from '@lingui/macro';
 import { Box, Button } from '@mui/material';
+import { isFunSupplyAsset } from 'src/components/transactions/FunCheckout/funSupplyAssets';
 import { useSupplyButtonAction } from 'src/components/transactions/FunCheckout/useSupplyButtonAction';
 import { useAssetCaps } from 'src/hooks/useAssetCaps';
 import { useRootStore } from 'src/store/root';
@@ -43,8 +44,14 @@ export const SupplyAssetsListMobileItem = ({
   const { supplyCap: supplyCapUsage } = useAssetCaps();
   const isMaxCapReached = supplyCapUsage.isMaxed;
 
+  // fun-routed assets can be supplied from any EVM asset / fiat via the funkit
+  // checkout, so an empty wallet doesn't block supplying them.
   const disableSupply =
-    !isActive || isPaused || isFreezed || Number(walletBalance) <= 0 || isMaxCapReached;
+    !isActive ||
+    isPaused ||
+    isFreezed ||
+    (Number(walletBalance) <= 0 && !isFunSupplyAsset(currentMarket, underlyingAsset)) ||
+    isMaxCapReached;
 
   return (
     <ListMobileItemWrapper
