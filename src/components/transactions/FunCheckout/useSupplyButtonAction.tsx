@@ -10,6 +10,8 @@ export type SupplyButtonReserve = {
   underlyingAsset: string;
   name: string;
   symbol: string;
+  /** Ringed aToken icon data URI from useFunSupplyATokenIcon (fun-routed rows only). */
+  aTokenBase64?: string;
   /** Aave's `supplyAPY` — a 0–1 fraction. */
   supplyAPY: string | number;
   /** `usageAsCollateralEnabledOnUser` from the reserve. */
@@ -41,6 +43,7 @@ export function useSupplyButtonAction(): (reserve: SupplyButtonReserve) => void 
         beginFunSupply({
           underlyingAsset: reserve.underlyingAsset,
           symbol: reserve.symbol,
+          aTokenBase64: reserve.aTokenBase64,
           supplyAPY: reserve.supplyAPY,
           collateralEnabled: reserve.collateralEnabled,
           chainId: currentMarketData.chainId,

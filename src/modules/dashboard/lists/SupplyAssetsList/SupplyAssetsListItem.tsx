@@ -22,6 +22,7 @@ import { NoData } from 'src/components/primitives/NoData';
 import { Row } from 'src/components/primitives/Row';
 import { TokenIcon } from 'src/components/primitives/TokenIcon';
 import { isFunSupplyAsset } from 'src/components/transactions/FunCheckout/funSupplyAssets';
+import { useFunSupplyATokenIcon } from 'src/components/transactions/FunCheckout/useFunSupplyATokenIcon';
 import { useSupplyButtonAction } from 'src/components/transactions/FunCheckout/useSupplyButtonAction';
 import { WalletBalancesMap } from 'src/hooks/app-data-provider/useWalletBalances';
 import { useAssetCaps } from 'src/hooks/useAssetCaps';
@@ -120,6 +121,11 @@ export const SupplyAssetsListItemDesktop = ({
 
   const { openSwitch } = useModalContext();
   const handleSupplyClick = useSupplyButtonAction();
+  // Ringed aToken icon for the fun checkout's add-to-wallet (fun-routed rows only)
+  const { aTokenBase64, generator: aTokenIconGenerator } = useFunSupplyATokenIcon(
+    underlyingAsset,
+    iconSymbol
+  );
 
   // Disable the asset to prevent it from being supplied if supply cap has been reached
   const { supplyCap: supplyCapUsage, debtCeiling } = useAssetCaps();
@@ -248,6 +254,7 @@ export const SupplyAssetsListItemDesktop = ({
       </ListColumn>
 
       <ListButtonsColumn>
+        {aTokenIconGenerator}
         <Button
           disabled={disableSupply}
           variant="contained"
@@ -256,6 +263,7 @@ export const SupplyAssetsListItemDesktop = ({
               underlyingAsset,
               name,
               symbol,
+              aTokenBase64,
               supplyAPY,
               collateralEnabled: usageAsCollateralEnabledOnUser,
             });
@@ -345,6 +353,11 @@ export const SupplyAssetsListItemMobile = ({
   const currentMarket = useRootStore((store) => store.currentMarket);
   const handleSupplyClick = useSupplyButtonAction();
   const wrappedTokenReserves = useWrappedTokens();
+  // Ringed aToken icon for the fun checkout's add-to-wallet (fun-routed rows only)
+  const { aTokenBase64, generator: aTokenIconGenerator } = useFunSupplyATokenIcon(
+    underlyingAsset,
+    iconSymbol
+  );
 
   // Disable the asset to prevent it from being supplied if supply cap has been reached
   const { supplyCap: supplyCapUsage } = useAssetCaps();
@@ -459,6 +472,7 @@ export const SupplyAssetsListItemMobile = ({
       </Row>
 
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 5 }}>
+        {aTokenIconGenerator}
         <Button
           disabled={disableSupply}
           variant="contained"
@@ -467,6 +481,7 @@ export const SupplyAssetsListItemMobile = ({
               underlyingAsset,
               name,
               symbol,
+              aTokenBase64,
               supplyAPY,
               collateralEnabled: usageAsCollateralEnabledOnUser,
             })

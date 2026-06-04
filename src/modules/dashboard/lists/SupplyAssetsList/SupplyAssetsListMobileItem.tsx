@@ -2,6 +2,7 @@ import { ProtocolAction } from '@aave/contract-helpers';
 import { Trans } from '@lingui/macro';
 import { Box, Button } from '@mui/material';
 import { isFunSupplyAsset } from 'src/components/transactions/FunCheckout/funSupplyAssets';
+import { useFunSupplyATokenIcon } from 'src/components/transactions/FunCheckout/useFunSupplyATokenIcon';
 import { useSupplyButtonAction } from 'src/components/transactions/FunCheckout/useSupplyButtonAction';
 import { useAssetCaps } from 'src/hooks/useAssetCaps';
 import { useRootStore } from 'src/store/root';
@@ -38,6 +39,11 @@ export const SupplyAssetsListMobileItem = ({
 }: DashboardReserve) => {
   const currentMarket = useRootStore((state) => state.currentMarket);
   const handleSupplyClick = useSupplyButtonAction();
+  // Ringed aToken icon for the fun checkout's add-to-wallet (fun-routed rows only)
+  const { aTokenBase64, generator: aTokenIconGenerator } = useFunSupplyATokenIcon(
+    underlyingAsset,
+    iconSymbol
+  );
 
   // Disable the asset to prevent it from being supplied if supply cap has been reached
   const { supplyCap: supplyCapUsage } = useAssetCaps();
@@ -111,6 +117,7 @@ export const SupplyAssetsListMobileItem = ({
       </Row>
 
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 5 }}>
+        {aTokenIconGenerator}
         <Button
           disabled={disableSupply}
           variant="contained"
@@ -119,6 +126,7 @@ export const SupplyAssetsListMobileItem = ({
               underlyingAsset,
               name,
               symbol,
+              aTokenBase64,
               supplyAPY,
               collateralEnabled: usageAsCollateralEnabledOnUser,
             })
