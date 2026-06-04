@@ -357,7 +357,16 @@ export const SupplyAssetsListItemMobile = ({
   const wrappedToken = wrappedTokenReserves.find(
     (r) => r.tokenOut.underlyingAsset === underlyingAsset
   );
-
+  console.log('yo?');
+  console.log(
+    'symbol, name,',
+    symbol,
+    name,
+    underlyingAsset,
+    aIncentivesData,
+    aTokenAddress,
+    decimals
+  );
   return (
     <ListMobileItemWrapper
       symbol={symbol}
