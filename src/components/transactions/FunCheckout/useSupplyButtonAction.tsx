@@ -1,3 +1,4 @@
+import { useAppDataContext } from 'src/hooks/app-data-provider/useAppDataProvider';
 import { useModalContext } from 'src/hooks/useModal';
 import { useRootStore } from 'src/store/root';
 
@@ -9,10 +10,8 @@ export type SupplyButtonReserve = {
   underlyingAsset: string;
   name: string;
   symbol: string;
-  decimals: number;
   /** Aave's `supplyAPY` — a 0–1 fraction. */
   supplyAPY: string | number;
-  aTokenAddress: string;
   /** `usageAsCollateralEnabledOnUser` from the reserve. */
   collateralEnabled: boolean;
 };
@@ -22,29 +21,39 @@ export type SupplyButtonReserve = {
  * Core mainnet market it opens the funkit checkout modal; for everything else it
  * falls back to the native Aave supply modal (`openSupply`). Shared by all 3
  * Supply list-item variants so the branch lives in one place.
+ *
+ * Receipt-token metadata (the aToken's address/symbol/decimals/icon) comes from
+ * the SDK reserve already in app state — no integrator-owned copies.
  */
 export function useSupplyButtonAction(): (reserve: SupplyButtonReserve) => void {
   const currentMarket = useRootStore((store) => store.currentMarket);
   const currentMarketData = useRootStore((store) => store.currentMarketData);
+  const { supplyReserves } = useAppDataContext();
   const { openSupply } = useModalContext();
 
   return (reserve: SupplyButtonReserve) => {
     if (isFunSupplyAsset(currentMarket, reserve.underlyingAsset)) {
-      const handled = beginFunSupply({
-        underlyingAsset: reserve.underlyingAsset,
-        symbol: reserve.symbol,
-        decimals: reserve.decimals,
-        aTokenAddress: reserve.aTokenAddress,
-        poolAddress: currentMarketData.addresses.LENDING_POOL,
-        supplyAPY: reserve.supplyAPY,
-        collateralEnabled: reserve.collateralEnabled,
-        chainId: currentMarketData.chainId,
-      });
+      const sdkReserve = supplyReserves.find(
+        (r) => r.underlyingToken.address.toLowerCase() === reserve.underlyingAsset.toLowerCase()
+      );
+      const handled =
+        !!sdkReserve &&
+        beginFunSupply({
+          underlyingAsset: reserve.underlyingAsset,
+          symbol: reserve.symbol,
+          supplyAPY: reserve.supplyAPY,
+          collateralEnabled: reserve.collateralEnabled,
+          chainId: currentMarketData.chainId,
+          poolAddress: currentMarketData.addresses.LENDING_POOL,
+          underlyingImageUrl: sdkReserve.underlyingToken.imageUrl,
+          aToken: sdkReserve.aToken,
+        });
       if (handled) {
         return;
       }
-      // funkit island hasn't mounted yet (ssr:false chunk still loading) —
-      // fall through to the native modal instead of dropping the click.
+      // Fall through to the native modal when the funkit island hasn't mounted
+      // yet (ssr:false chunk still loading) or the SDK market data isn't in
+      // yet — instead of dropping the click.
     }
     openSupply(reserve.underlyingAsset, currentMarket, reserve.name, 'dashboard');
   };

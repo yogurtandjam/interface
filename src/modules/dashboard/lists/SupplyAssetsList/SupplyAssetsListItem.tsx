@@ -106,7 +106,6 @@ export const SupplyAssetsListItemDesktop = ({
   supplyAPY,
   aIncentivesData,
   aTokenAddress,
-  decimals,
   underlyingAsset,
   isIsolated,
   usageAsCollateralEnabledOnUser,
@@ -257,9 +256,7 @@ export const SupplyAssetsListItemDesktop = ({
               underlyingAsset,
               name,
               symbol,
-              decimals,
               supplyAPY,
-              aTokenAddress,
               collateralEnabled: usageAsCollateralEnabledOnUser,
             });
           }}
@@ -337,7 +334,6 @@ export const SupplyAssetsListItemMobile = ({
   supplyAPY,
   aIncentivesData,
   aTokenAddress,
-  decimals,
   isIsolated,
   usageAsCollateralEnabledOnUser,
   underlyingAsset,
@@ -356,16 +352,6 @@ export const SupplyAssetsListItemMobile = ({
 
   const wrappedToken = wrappedTokenReserves.find(
     (r) => r.tokenOut.underlyingAsset === underlyingAsset
-  );
-  console.log('yo?');
-  console.log(
-    'symbol, name,',
-    symbol,
-    name,
-    underlyingAsset,
-    aIncentivesData,
-    aTokenAddress,
-    decimals
   );
   return (
     <ListMobileItemWrapper
@@ -481,9 +467,7 @@ export const SupplyAssetsListItemMobile = ({
               underlyingAsset,
               name,
               symbol,
-              decimals,
               supplyAPY,
-              aTokenAddress,
               collateralEnabled: usageAsCollateralEnabledOnUser,
             })
           }

@@ -28,7 +28,6 @@ export const SupplyAssetsListMobileItem = ({
   supplyAPY,
   aIncentivesData,
   aTokenAddress,
-  decimals,
   isIsolated,
   usageAsCollateralEnabledOnUser,
   isActive,
@@ -120,9 +119,7 @@ export const SupplyAssetsListMobileItem = ({
               underlyingAsset,
               name,
               symbol,
-              decimals,
               supplyAPY,
-              aTokenAddress,
               collateralEnabled: usageAsCollateralEnabledOnUser,
             })
           }
