@@ -17,3 +17,9 @@ jobs:
           comment-summary-in-pr: on-failure
           fail-on-severity: moderate
           license-check: false
+          # ws@8.17.1 (transitive: funkit -> fun-relay -> tronweb -> ethers@6.13.5).
+          # Both advisories are server-side issues (DoS from tiny frames; uninitialized
+          # memory disclosure); the interface only uses ws as a transitive client (the
+          # browser uses native WebSocket). A scoped yarn resolution can't reach a dep
+          # this deeply nested in yarn-classic, so allowlist these specific GHSAs.
+          allow-ghsas: GHSA-96hv-2xvq-fx4p, GHSA-58qx-3vcg-4xpx
