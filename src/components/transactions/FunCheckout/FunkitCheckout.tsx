@@ -10,16 +10,18 @@ import { useTheme } from '@mui/material';
 import { useQueryClient } from '@tanstack/react-query';
 import { BigNumber } from 'bignumber.js';
 import { useModal } from 'connectkit';
-import { useCallback, useEffect, useRef } from 'react';
+import { startTransition, useCallback, useEffect, useRef, useState } from 'react';
 import { useAppDataContext } from 'src/hooks/app-data-provider/useAppDataProvider';
 import { useRootStore } from 'src/store/root';
 import { aaveTheme } from 'src/ui-config/funkit/aaveTheme';
 import { funkitConfig } from 'src/ui-config/funkit/funkitConfig';
 import { queryKeysFactory } from 'src/ui-config/queries';
+import { wagmiConfig } from 'src/ui-config/wagmiConfig';
 import { FUNKIT } from 'src/utils/events';
 import { calculateHFAfterSupply } from 'src/utils/hfUtils';
 import { getAddress } from 'viem';
 import { useAccount } from 'wagmi';
+import { getAccount } from 'wagmi/actions';
 
 import { buildFunSupplyConfig, FunSupplyReserve } from './funSupplyAssets';
 import { registerFunSupply } from './funSupplyBridge';
@@ -250,15 +252,50 @@ function InnerCheckout() {
 }
 
 export function FunkitCheckout() {
-  // Wait for wagmi to finish reconnecting before mounting FunkitProvider.
-  // FunkitProviderInner calls useAccountEffect({ onDisconnect }) internally,
-  // which fires during the transient disconnected→reconnecting→connected cycle
-  // on page refresh and clears WALLETCONNECT_DEEPLINK_CHOICE from localStorage,
-  // corrupting the wallet connection state.
-  const { status } = useAccount();
-  const isReconnecting = status === 'reconnecting' || status === 'connecting';
+  // Gate the FunkitProvider mount on wagmi having finished its INITIAL reconnect.
+  // FunkitProviderInner calls useAccountEffect({ onDisconnect }) internally, which
+  // fires during the transient disconnected→reconnecting→connected cycle on page
+  // refresh and clears WALLETCONNECT_DEEPLINK_CHOICE from localStorage, corrupting
+  // the wallet connection state — so we must not mount until that settles.
+  //
+  // This must be a ONE-SHOT latch, NOT a persistent `useAccount().status`
+  // subscription. With wagmi `ssr: false` (the default), `Hydrate` re-runs
+  // `reconnect()` in its render body on every render pass; during a route-change
+  // transition each of reconnect's paired guest status writes (disconnected→
+  // connecting→disconnected) lands mid-render. A component that re-renders on
+  // `status` (via useAccount or any tracked snapshot) turns each write into a
+  // synchronous update that ABORTS the in-flight transition; React restarts from
+  // the root, Hydrate re-runs, reconnect re-fires, and the navigation livelocks
+  // (~47 reconnects / ~94 aborted render passes over ~5s) until the transition
+  // lane expires. So: read status once; if unsettled, latch to settled via a
+  // detach-on-settle store subscription wrapped in startTransition (never aborts
+  // an in-flight nav render). Once settled we stay mounted — we deliberately do
+  // NOT re-hide on a later transient `connecting` (that would re-introduce the
+  // livelock, and unmounting would only make the Supply buttons inert; the
+  // mid-checkout "address set but isConnected:false" case is handled in
+  // InnerCheckout's onLoginRequired).
+  const [settled, setSettled] = useState(() => {
+    const { status } = getAccount(wagmiConfig);
+    return status !== 'reconnecting' && status !== 'connecting';
+  });
 
-  if (!funkitConfig.apiKey || isReconnecting) {
+  useEffect(() => {
+    if (settled) {
+      return;
+    }
+    const unsubscribe = wagmiConfig.subscribe(
+      (state) => state.status,
+      (status) => {
+        if (status !== 'reconnecting' && status !== 'connecting') {
+          unsubscribe();
+          startTransition(() => setSettled(true));
+        }
+      }
+    );
+    return unsubscribe;
+  }, [settled]);
+
+  if (!funkitConfig.apiKey || !settled) {
     return null;
   }
 

@@ -1,0 +1,87 @@
+diff --git a/node_modules/@funkit/connect/dist/index.js b/node_modules/@funkit/connect/dist/index.js
+index 8ceaa69..ee32aba 100644
+--- a/node_modules/@funkit/connect/dist/index.js
++++ b/node_modules/@funkit/connect/dist/index.js
+@@ -4952,8 +4952,8 @@ function useCheckoutDirectExecution() {
+   const { t } = useFunkitTranslation();
+   const { address } = useFunkitUserInfo();
+   const { switchChainAsync } = useFunkitSwitchChains({});
+-  const { connector } = useFunkitAccount();
+-  const { data: _walletClient } = useWalletClient();
++  const { connector } = useAccount();
++  const _funkitFixConfig = useConfig();
+   const { getIsRelayEnabled } = useRelayBypass();
+   const { apiKey } = useFunkitConfig();
+   const getRelayDirectExecutionBaseQuote = useCallback12(
+@@ -5034,7 +5034,7 @@ function useCheckoutDirectExecution() {
+       tokenAddress,
+       spenderAddress
+     }) => {
+-      const walletClient = _walletClient;
++      const walletClient = await getWalletClient(_funkitFixConfig).catch(() => void 0);
+       if (!walletClient) {
+         throw new Error("Viem wallet client is not defined");
+       }
+@@ -5051,7 +5051,7 @@ function useCheckoutDirectExecution() {
+       logger.info(`${logPrefix3}:success`, logData);
+       return txHash;
+     },
+-    [_walletClient]
++    [_funkitFixConfig]
+   );
+   const checkAllowance = useCallback12(
+     async ({
+@@ -5059,7 +5059,7 @@ function useCheckoutDirectExecution() {
+       ownerAddress,
+       spenderAddress
+     }) => {
+-      const walletClient = _walletClient;
++      const walletClient = await getWalletClient(_funkitFixConfig).catch(() => void 0);
+       if (!walletClient) {
+         throw new Error("Viem wallet client is not defined");
+       }
+@@ -5080,7 +5080,7 @@ function useCheckoutDirectExecution() {
+       logger.info(`${logPrefix3}:success`, logData);
+       return allowance;
+     },
+-    [_walletClient]
++    [_funkitFixConfig]
+   );
+   const resetApprovalIfNeeded = useCallback12(
+     async (relayQuote) => {
+@@ -5161,7 +5161,8 @@ function useCheckoutDirectExecution() {
+         checkoutItem.selectedSourceAssetInfo.chainId
+       );
+       logger.log(`${logPrefix3}:executionChainId`, { executionChainId });
+-      const walletClient = _walletClient ? await disableAtomicBatchIfSupported(_walletClient, executionChainId) : void 0;
++      const __wc0 = await getWalletClient(_funkitFixConfig).catch(() => void 0);
++      const walletClient = __wc0 ? await disableAtomicBatchIfSupported(__wc0, executionChainId) : void 0;
+       if (!walletClient && !withdrawalClient) {
+         throw new Error("Viem wallet client is not defined");
+       }
+@@ -5317,7 +5318,7 @@ function useCheckoutDirectExecution() {
+       };
+       return await waitForConfirmation();
+     },
+-    [_walletClient, checkAndSwitchChains, t, resetApprovalIfNeeded]
++    [_funkitFixConfig, checkAndSwitchChains, t, resetApprovalIfNeeded]
+   );
+   const getDirectExecutionInfo = useCallback12(
+     (checkoutItem) => {
+@@ -47719,13 +47720,13 @@ var TITLE_ID2 = "rk-connect-modal-title";
+ function ConnectModal({ onClose, open }) {
+   const connectionStatus = useConnectionStatus();
+   const { disconnect } = useFunkitDisconnect();
+-  const { isConnecting } = useAccount();
++  const __ccfg = useConfig();
+   const onConnectModalCancel = React302.useCallback(() => {
+-    if (isConnecting) {
++    if (__ccfg.state.status === "connecting") {
+       disconnect();
+     }
+     onClose();
+-  }, [onClose, disconnect, isConnecting]);
++  }, [onClose, disconnect, __ccfg]);
+   if (connectionStatus === "disconnected" || connectionStatus === "loading") {
+     return /* @__PURE__ */ React302.createElement(
+       Dialog,
